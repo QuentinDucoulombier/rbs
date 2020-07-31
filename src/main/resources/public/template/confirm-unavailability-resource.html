@@ -1,4 +1,5 @@
-<lightbox show="displayLightbox.saveQuantityResource" on-close="displayLightbox.saveQuantityResource = false">
+<lightbox show="displayLightbox.saveUnavailabilityResource"
+          on-close="displayLightbox.saveUnavailabilityResource = false; initEditedUnavailability()">
     <div class="row form-section">
         <h2>
             <i18n><span class="no-style">Modification d'une resource</span></i18n>
@@ -6,10 +7,9 @@
         <section class="twelve cell">
             <label>
                 <b class="centered-text">Attention</b>
-                <div>Des réservations supérieures à cette quantité ont été prévues.</div>
+                <div>Des réservations sont prévues sur cette nouvelle indisponibilité.</div>
                 <div>Cela entrainera la suspension des réservations concernées.</div>
                 <div>Les gestionnaires devront définir les réservations à conserver.</div>
-                <p>Quantité : <b>[[editedResource.quantity]]</b></p>
                 <p>Réservations concernées</p>
             </label>
 
@@ -23,7 +23,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr ng-repeat="booking in listBookingsConflictingQuantity">
+                <tr ng-repeat="booking in listBookingsConflictingOneAvailability">
                     <td>[[booking.owner_name]]</td>
                     <td>[[formatMoment(booking.startMoment)]]</td>
                     <td>[[formatMoment(booking.endMoment)]]</td>
@@ -32,8 +32,13 @@
                 </tbody>
             </table>
 
-            <button class="right-magnet" ng-if="display.processing !== true" ng-click="doSaveResource()"><i18n>rbs.save</i18n></button>
-            <input type="button" class="cancel right-magnet" i18n-value="cancel" ng-click="displayLightbox.saveQuantityResource = false" ng-if="display.processing !== true" />
+            <button class="right-magnet"
+                    ng-if="display.processing !== true && editedUnavailability.id === undefined"
+                    ng-click="doSaveUnavailability()"><i18n>rbs.save</i18n></button>
+            <button class="right-magnet"
+                    ng-if="display.processing !== true && editedUnavailability.id != undefined"
+                    ng-click="doSaveUnavailability()"><i18n>rbs.save</i18n></button>
+            <input type="button" class="cancel right-magnet" i18n-value="cancel" ng-click="displayLightbox.saveUnavailabilityResource = false" ng-if="display.processing !== true" />
 
             <button class="right-magnet cancel disabled" disabled ng-if="display.processing"><i18n>rbs.processing</i18n></button>
         </section>

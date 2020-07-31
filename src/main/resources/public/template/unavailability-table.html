@@ -1,0 +1,156 @@
+<label><i18n>rbs.resource.edit.unavailable.label</i18n></label>
+<table class="resource-table">
+    <thead>
+    <tr>
+        <td style="width: 30%;"><i18n>rbs.resource.edit.tab.date.start</i18n></td>
+        <td style="width: 30%;"><i18n>rbs.resource.edit.tab.date.end</i18n></td>
+        <td style="width: 20%;"><i18n>rbs.resource.edit.tab.days</i18n></td>
+        <td style="width: 10%;"><i18n>rbs.resource.edit.tab.quantity</i18n></td>
+        <td style="width: 10%;"></td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="u in editedResource.unavailability track by $index">
+
+        <!-- Display mode -->
+        <td ng-if-start="editedUnavailability.id != u.id || displayLightbox.deleteUnavailabilityResource">[[formatMoment(u.startMoment)]]</td>
+        <td>[[formatMoment(u.endMoment)]]</td>
+        <td>
+            <ul class="check-boxes">
+                <li class="two">
+                    <i18n ng-class="{selected: u.days[1]}">rbs.resource.edit.unavailable.days.monday</i18n>
+                </li>
+                <li class="two">
+                    <i18n ng-class="{selected: u.days[2]}">rbs.resource.edit.unavailable.days.tuesday</i18n>
+                </li>
+                <li class="two">
+                    <i18n ng-class="{selected: u.days[3]}">rbs.resource.edit.unavailable.days.wednesday</i18n>
+                </li>
+                <li class="two">
+                    <i18n ng-class="{selected: u.days[4]}">rbs.resource.edit.unavailable.days.thursday</i18n>
+                </li>
+                <li class="two">
+                    <i18n ng-class="{selected: u.days[5]}">rbs.resource.edit.unavailable.days.friday</i18n>
+                </li>
+                <li class="two">
+                    <i18n ng-class="{selected: u.days[6]}">rbs.resource.edit.unavailable.days.saturday</i18n>
+                </li>
+            </ul>
+        </td>
+        <td>[[u.quantity]] / [[editedResource.quantity]]</td>
+        <td ng-if-end>
+            <button type="button" class="classic-button six" ng-click="deleteUnavailability($index)">
+                <i class="suppr md-icon"></i>
+            </button>
+            <button type="button" class="classic-button six" ng-click="editUnavailability($index)">
+                <i class="modif md-icon"></i>
+            </button>
+        </td>
+
+        <!-- Edit mode -->
+        <td class="editUnavailability" ng-if-start="editedUnavailability.id === u.id  && !displayLightbox.deleteUnavailabilityResource">
+            <date-picker class="four" ng-model="editedUnavailability.startDate"></date-picker>
+            <time-picker-rbs class="four" ng-model="editedUnavailability.startTime"></time-picker-rbs>
+        </td>
+        <td class="editUnavailability">
+            <date-picker class="four" ng-model="editedUnavailability.endDate"></date-picker>
+            <time-picker-rbs class="four" ng-model="editedUnavailability.endTime"></time-picker-rbs>
+        </td>
+        <td>
+            <ul class="check-boxes">
+                <li class="two">
+                    <input type="checkbox" id="edit-monday" ng-model="editedUnavailability.days[1]">
+                    <label for="edit-monday"><i18n>rbs.resource.edit.unavailable.days.monday</i18n></label>
+                </li>
+                <li class="two">
+                    <input type="checkbox" id="edit-tuesday" ng-model="editedUnavailability.days[2]">
+                    <label for="edit-tuesday"><i18n>rbs.resource.edit.unavailable.days.tuesday</i18n></label>
+                </li>
+                <li class="two">
+                    <input type="checkbox" id="edit-wednesday" ng-model="editedUnavailability.days[3]">
+                    <label for="edit-wednesday"><i18n>rbs.resource.edit.unavailable.days.wednesday</i18n></label>
+                </li>
+                <li class="two">
+                    <input type="checkbox" id="edit-thursday" ng-model="editedUnavailability.days[4]">
+                    <label for="edit-thursday"><i18n>rbs.resource.edit.unavailable.days.thursday</i18n></label>
+                </li>
+                <li class="two">
+                    <input type="checkbox" id="edit-friday" ng-model="editedUnavailability.days[5]">
+                    <label for="edit-friday"><i18n>rbs.resource.edit.unavailable.days.friday</i18n></label>
+                </li>
+                <li class="two">
+                    <input type="checkbox" id="edit-saturday" ng-model="editedUnavailability.days[6]">
+                    <label for="edit-saturday"><i18n>rbs.resource.edit.unavailable.days.saturday</i18n></label>
+                </li>
+            </ul>
+        </td>
+        <td>
+            <input class="input-size" type="number" min="0" max="[[editedResource.quantity]]"
+                   ng-model="editedUnavailability.quantity" /> / [[editedResource.quantity]]
+        </td>
+        <td ng-if-end>
+            <button type="button" class="classic-button six" ng-click="saveUnavailability($index)">
+                <i class="valid md-icon"></i>
+            </button>
+            <button type="button" class="classic-button six" ng-click="initEditedUnavailability()">
+                <i class="cancel md-icon"></i>
+            </button>
+        </td>
+    </tr>
+
+    <!-- Creation mode (disappear on edit mode) -->
+    <tr id="addUnavailability"  ng-if="editedUnavailability.id === undefined">
+        <td>
+            <i class="date md-icon two"></i>
+            <span class="ten">
+                <date-picker class="four" ng-model="editedUnavailability.startDate"></date-picker>
+                <time-picker-rbs class="four" ng-model="editedUnavailability.startTime"></time-picker-rbs>
+            </span>
+        </td>
+        <td>
+            <i class="date md-icon two"></i>
+            <span class="ten">
+                <date-picker class="four" ng-model="editedUnavailability.endDate"></date-picker>
+                <time-picker-rbs class="four" ng-model="editedUnavailability.endTime"></time-picker-rbs>
+            </span>
+        </td>
+        <td>
+            <ul class="check-boxes">
+                <li class="two">
+                    <input type="checkbox" id="create-monday" ng-model="editedUnavailability.days[1]">
+                    <label for="create-monday"><i18n>rbs.resource.edit.unavailable.days.monday</i18n></label>
+                </li>
+                <li class="two">
+                    <input type="checkbox" id="create-tuesday" ng-model="editedUnavailability.days[2]">
+                    <label for="create-tuesday"><i18n>rbs.resource.edit.unavailable.days.tuesday</i18n></label>
+                </li>
+                <li class="two">
+                    <input type="checkbox" id="create-wednesday" ng-model="editedUnavailability.days[3]">
+                    <label for="create-wednesday"><i18n>rbs.resource.edit.unavailable.days.wednesday</i18n></label>
+                </li>
+                <li class="two">
+                    <input type="checkbox" id="create-thursday" ng-model="editedUnavailability.days[4]">
+                    <label for="create-thursday"><i18n>rbs.resource.edit.unavailable.days.thursday</i18n></label>
+                </li>
+                <li class="two">
+                    <input type="checkbox" id="create-friday" ng-model="editedUnavailability.days[5]">
+                    <label for="create-friday"><i18n>rbs.resource.edit.unavailable.days.friday</i18n></label>
+                </li>
+                <li class="two">
+                    <input type="checkbox" id="create-saturday" ng-model="editedUnavailability.days[6]">
+                    <label for="create-saturday"><i18n>rbs.resource.edit.unavailable.days.saturday</i18n></label>
+                </li>
+            </ul>
+        </td>
+        <td>
+            <input class="input-size" type="number" min="0" max="[[editedResource.quantity]]"
+                   ng-model="editedUnavailability.quantity" /> / [[editedResource.quantity]]
+        </td>
+        <td>
+            <button type="button" class="classic-button twelve" ng-click="saveUnavailability(editedUnavailability)">
+                <i class="add md-icon"></i>
+            </button>
+        </td>
+    </tr>
+    </tbody>
+</table>

@@ -24,6 +24,7 @@ import net.atos.entng.rbs.controllers.BookingController;
 import net.atos.entng.rbs.controllers.DisplayController;
 import net.atos.entng.rbs.controllers.ResourceController;
 import net.atos.entng.rbs.controllers.ResourceTypeController;
+import net.atos.entng.rbs.controllers.UnavailabilityController;
 import net.atos.entng.rbs.events.RbsRepositoryEvents;
 import net.atos.entng.rbs.events.RbsSearchingEvents;
 import net.atos.entng.rbs.filters.TypeOwnerSharedOrLocalAdmin;
@@ -90,6 +91,9 @@ public class Rbs extends BaseServer {
 
 		BookingController bookingController = new BookingController(eb);
 		addController(bookingController);
+
+		UnavailabilityController unavailabilityController = new UnavailabilityController(eb);
+		addController(unavailabilityController);
 
 		setDefaultResourceFilter(new TypeOwnerSharedOrLocalAdmin());
 	}

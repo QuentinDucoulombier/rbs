@@ -108,6 +108,39 @@
 			</div>
 		</div>
 
+		<!-- Unavailable periods -->
+		<hr/>
+		<div class="row" ng-include="'/rbs/public/template/unavailability-table.html'"></div>
+		<hr class="row" />
+
+		<div class="warning default-fontsize" ng-if="isResourceUnavailabilityUsed()">
+			<div>
+				<i18n>rbs.resource.edit.unavailable.warning</i18n>
+				<input type="checkbox" id="unavailability-details" class="transparent" ng-model="unavailabilityChecked" />
+				<label class="right-magnet pointer blue" for="unavailability-details"><i18n>rbs.resource.edit.details</i18n></label>
+			</div>
+			<div ng-if="unavailabilityChecked">
+				<table class="resource-table">
+					<thead>
+					<tr>
+						<td style="width: 30%;"><i18n>rbs.resource.edit.tab.owner</i18n></td>
+						<td style="width: 30%;"><i18n>rbs.resource.edit.tab.date.start</i18n></td>
+						<td style="width: 30%;"><i18n>rbs.resource.edit.tab.date.end</i18n></td>
+						<td style="width: 10%;"><i18n>rbs.resource.edit.tab.quantity</i18n></td>
+					</tr>
+					</thead>
+					<tbody>
+					<tr ng-repeat="booking in listBookingsConflictingAvailability">
+						<td>[[booking.owner_name]]</td>
+						<td>[[formatMoment(booking.startMoment)]]</td>
+						<td>[[formatMoment(booking.endMoment)]]</td>
+						<td>[[booking.quantity]]</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
 		<!-- Color -->
 		<hr/>
 		<div class="row">
@@ -136,3 +169,5 @@
 
 <!--    Lightboxes -->
 <div ng-include="'/rbs/public/template/confirm-quantity-resource.html'"></div>
+<div ng-include="'/rbs/public/template/confirm-unavailability-resource.html'"></div>
+<div ng-include="'/rbs/public/template/confirm-delete-unavailability.html'"></div>

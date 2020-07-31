@@ -1,0 +1,58 @@
+<lightbox show="displayLightbox.deleteUnavailabilityResource"
+		  on-close="displayLightbox.deleteUnavailabilityResource = false; initEditedUnavailability()">
+	<div class="row form-section">
+		<h2>
+			<i18n><span class="no-style">Suppression d'une indisponibilité</span></i18n>
+		</h2>
+		<section class="twelve cell">
+			<label>Êtes vous sûrs de vouloir supprimer cette période d'indisponibilité ?</label>
+
+			<table class="resource-table">
+				<thead>
+				<tr>
+					<td style="width: 30%;"><i18n>rbs.resource.edit.tab.date.start</i18n></td>
+					<td style="width: 30%;"><i18n>rbs.resource.edit.tab.date.end</i18n></td>
+					<td style="width: 20%;"><i18n>rbs.resource.edit.tab.days</i18n></td>
+					<td style="width: 10%;"><i18n>rbs.resource.edit.tab.quantity</i18n></td>
+				</tr>
+				</thead>
+				<tbody>
+				<tr>
+					<td>[[formatMoment(editedUnavailability.startMoment)]]</td>
+					<td>[[formatMoment(editedUnavailability.endMoment)]]</td>
+					<td>
+						<ul class="check-boxes">
+							<li class="two">
+								<i18n ng-class="{selected: editedUnavailability.days[1]}">rbs.resource.edit.unavailable.days.monday</i18n>
+							</li>
+							<li class="two">
+								<i18n ng-class="{selected: editedUnavailability.days[2]}">rbs.resource.edit.unavailable.days.tuesday</i18n>
+							</li>
+							<li class="two">
+								<i18n ng-class="{selected: editedUnavailability.days[3]}">rbs.resource.edit.unavailable.days.wednesday</i18n>
+							</li>
+							<li class="two">
+								<i18n ng-class="{selected: editedUnavailability.days[4]}">rbs.resource.edit.unavailable.days.thursday</i18n>
+							</li>
+							<li class="two">
+								<i18n ng-class="{selected: editedUnavailability.days[5]}">rbs.resource.edit.unavailable.days.friday</i18n>
+							</li>
+							<li class="two">
+								<i18n ng-class="{selected: editedUnavailability.days[6]}">rbs.resource.edit.unavailable.days.saturday</i18n>
+							</li>
+						</ul>
+					</td>
+					<td>[[editedUnavailability.quantity]] / [[editedResource.quantity]]</td>
+				</tbody>
+			</table>
+
+			<div class="row">
+				<button class="right-magnet" ng-if="display.processing !== true" ng-click="doDeleteUnavailability()"><i18n>rbs.delete</i18n></button>
+				<input type="button" class="cancel right-magnet" i18n-value="cancel"  ng-if="display.processing !== true"
+					   ng-click="displayLightbox.deleteUnavailabilityResource = false; initEditedUnavailability()"/>
+
+				<button class="right-magnet cancel disabled" disabled ng-if="display.processing"><i18n>rbs.deleting</i18n></button>
+			</div>
+		</section>
+	</div>
+</lightbox>

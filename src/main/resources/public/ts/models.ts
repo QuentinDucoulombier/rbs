@@ -118,7 +118,6 @@ function Booking(book?) {
 }
 
 Booking.prototype.save = function (cb, cbe) {
-    console.log(this);
     if (this.id) {
         this.update(cb, cbe);
     } else {
@@ -214,7 +213,7 @@ Booking.prototype.updateData = function (data) {
     for (let key in data) {
         this[key] = data[key];
     }
-}
+};
 
 Booking.prototype.validate = function (cb, cbe) {
     this.status = model.STATE_VALIDATED;
@@ -243,7 +242,6 @@ Booking.prototype.suspend = function (cb, cbe) {
 
 Booking.prototype.process = function (data, cb, cbe, context) {
     var booking = this;
-    console.log(this);
     http().putJson('/rbs/resource/' + this.resource.id + '/booking/' + this.id + '/process', data)
         .done(function () {
             if (typeof cb === 'function') {
@@ -847,6 +845,142 @@ Notification.prototype.removeNotifications = function (id, cb, cbe) {
         });
 };
 
+
+function Unavailability(data?) {
+    if (data) {
+        this.updateData(data);
+        this.startMoment = moment.utc(data.startMoment).tz(moment.tz.guess());
+        this.endMoment = moment.utc(data.endMoment).tz(moment.tz.guess());
+    } else {
+        var startDate;
+        if (this.startMoment) {
+            startDate = moment.utc(this.startMoment).tz(moment.tz.guess());
+        }
+
+        if (!startDate) {
+            startDate = moment();
+        }
+
+        var endDate;
+        if (this.endMoment) {
+            endDate = moment.utc(this.endMoment).tz(moment.tz.guess());
+        }
+
+        if (!endDate) {
+            endDate = moment();
+        }
+        this.startMoment = startDate;
+        this.endMoment = endDate;
+    }
+    this.iana = moment.tz.guess();
+}
+
+Unavailability.prototype.save = function (cb, cbe) {
+    if (this.id) {
+        this.update(cb, cbe);
+    } else {
+        this.create(cb, cbe);
+    }
+};
+
+Unavailability.prototype.update = function (cb, cbe) {
+    var unavailability = this;
+
+    http().postJson('/rbs/resource/' + this.resource.id + '/unavailability/' + this.id, this)
+        .done(function (u) {
+            if (typeof cb === 'function') {
+                cb();
+            }
+        })
+        .error(function (e) {
+            if (typeof cbe === 'function') {
+                cbe(model.parseError(e, unavailability, 'update'));
+            }
+        });
+};
+
+Unavailability.prototype.create = function (cb, cbe) {
+    var unavailability = this;
+    this.start_date = (moment.utc(this.startMoment._i).add('hours', -moment(this.startMoment._i).format('Z').split(':')[0])).unix();
+    this.end_date = (moment.utc(this.endMoment._i).add('hours', -moment(this.startMoment._i).format('Z').split(':')[0])).unix();
+
+    http().postJson('/rbs/resource/' + this.resource.id + '/unavailability', this)
+        .done(function (u) {
+            unavailability.updateData(u);
+            unavailability.resource.unavailability.push(unavailability);
+            if (typeof cb === 'function') {
+                cb();
+            }
+        })
+        .error(function (e) {
+            if (typeof cbe === 'function') {
+                cbe(model.parseError(e, unavailability, 'create'));
+            }
+        });
+};
+
+Unavailability.prototype.delete = function (cb, cbe) {
+    var unavailability = this;
+
+    http().delete('/rbs/resource/' + this.resource.id + '/unavailability/' + this.id)
+        .done(function () {
+            let unavailabilityArray = unavailability.resource.unavailability;
+            unavailabilityArray.splice(unavailabilityArray.findIndex(u => u.id === this.id), 1);
+            if (typeof cb === 'function') {
+                cb();
+            }
+        })
+        .error(function (e) {
+            if (typeof cbe === 'function') {
+                cbe(model.parseError(e, unavailability, 'delete'));
+            }
+        });
+};
+
+Unavailability.prototype.getSiblings = function (cb, cbe) {
+    let unavailability = this;
+
+    http().get('/rbs/resource/' + unavailability.resource.id + '/unavailability')
+        .done(function (listUnavailability) {
+            let resource = unavailability.resource;
+            if (resource != null) {
+                resource.unavailability = [];
+                listUnavailability.forEach(function (u) {
+                    let exportU = {
+                        id: u.id,
+                        resource: resource,
+                        startMoment: moment.tz(moment.utc(u.start_date), moment.tz.guess()),
+                        endMoment: moment.tz(moment.utc(u.end_date), moment.tz.guess()),
+                        quantity: u.quantity,
+                        days: []
+                    };
+
+                    for (let i =0; i < u.days.length; i++) {
+                        exportU.days.push(u.days[i] === '1');
+                    }
+                    let res = new Unavailability(exportU);
+                    resource.unavailability.push(res);
+                });
+            }
+            if (typeof cb === 'function') {
+                cb();
+            }
+        })
+        .error(function (e) {
+            if (typeof cbe === 'function') {
+                cbe(model.parseError(e, unavailability, 'delete'));
+            }
+        });
+};
+
+Unavailability.prototype.updateData = function (data) {
+    for (let key in data) {
+        this[key] = data[key];
+    }
+};
+
+
+
 export const RBS = {
     Booking,
     ExportBooking,
@@ -856,7 +990,8 @@ export const RBS = {
     SlotProfile,
     Slot,
     SlotJson,
-    Notification
+    Notification,
+    Unavailability
 };
 
 function extendsScheduleItemClass() {
@@ -871,8 +1006,7 @@ model.build = function () {
     this.makeModels(RBS);
     // Model.prototype.inherits(Booking, window.calendar.ScheduleItem);
 
-    model.loadStructures()
-    ;
+    model.loadStructures();
     // ResourceTypes collection with embedded Resources
     this.collection(RBS.ResourceType, {
         sync: function () {
@@ -1240,7 +1374,6 @@ model.refreshRessourceType = function () {
     model.recordedSelections.record();
     model.resourceTypes.sync();
 };
-
 
 model.refresh = function (isDisplayList) {
     // Record selections

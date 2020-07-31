@@ -253,7 +253,7 @@ a.structure:hover {
 }
 
 
-/* Evol additional style*/
+/* Quantity / Unavailability additional css */
 .input-size {
     width: 40px;
 }
@@ -359,6 +359,10 @@ i.add::before {
     margin-top: 1rem;
 }
 
+.resource-table tr {
+    line-height: 27px;
+}
+
 .resource-table tr td {
     padding: 0.5rem 0;
 }
@@ -369,6 +373,19 @@ i.add::before {
 
 #addUnavailability td input {
     margin: 0;
+}
+
+.editUnavailability input[type="text"] {
+    padding: 0;
+    margin: 0;
+    height: 20px;
+    line-height: 20px;
+}
+
+.resource-table tr td input[type="text"] {
+    color: #5b6472;
+    font-family: Roboto;
+    text-align: center;
 }
 
 .selected {
