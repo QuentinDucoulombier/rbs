@@ -1117,6 +1117,9 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                 $scope.editedBooking.startMoment,
                 $scope.editedBooking.endMoment
             );
+            if ($scope.editedBooking.is_periodic) {
+                $scope.booking.periodicEndDate = $scope.editedBooking._slots[$scope.editedBooking._slots.length-1].endMoment.toDate();
+            }
 
             $scope.editedBooking.type = $scope.editedBooking.resource.type;
             if (
@@ -3015,7 +3018,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             }
         };
 
-        // Quantity / Unavailability functions
+// Quantity / Unavailability functions
 
         $scope.initEditedUnavailability = function() : void {
             let now = moment();
@@ -3126,7 +3129,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                 $scope.listBookingsConflictingOneAvailability = [];
                 $scope.editedResource.bookings.forEach(function (booking) {
                     if (isBookingUsingUnavailability($scope.editedUnavailability, booking)) {
-                        $scope.updateQuantitiesAvailable(booking, false);
+                        $scope.updateQuantitiesAvailable(booking );
                         if ($scope.tempQuantities.bookingQuantityAvailable - booking.quantity < $scope.editedUnavailability.quantity) {
                             $scope.listBookingsConflictingOneAvailability.push(booking);
                         }
@@ -3206,8 +3209,8 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             $scope.tempQuantities.bookingQuantityAvailable = bookingQuantity;
         };
 
-        $scope.updateQuantitiesAvailable = function(booking, edited?) : void {
-            if (edited != false) {
+        $scope.updateQuantitiesAvailable = function(booking) : void {
+            if ($scope.editedBooking != null) {
                 updateEditedBookingMoments();
             }
 

@@ -19,27 +19,7 @@
 
 package net.atos.entng.rbs.controllers;
 
-import static net.atos.entng.rbs.BookingStatus.CREATED;
-import static net.atos.entng.rbs.BookingStatus.REFUSED;
-import static net.atos.entng.rbs.BookingStatus.VALIDATED;
-import static net.atos.entng.rbs.Rbs.RBS_NAME;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.notEmptyResponseHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import io.vertx.core.buffer.Buffer;
-import net.atos.entng.rbs.BookingUtils;
-import net.atos.entng.rbs.models.Slots;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
@@ -49,38 +29,20 @@ import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
-import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.AsyncResult;
+
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import net.atos.entng.rbs.filters.TypeAndResourceAppendPolicy;
-import net.atos.entng.rbs.model.ExportBooking;
-import net.atos.entng.rbs.model.ExportRequest;
-import net.atos.entng.rbs.model.ExportResponse;
-import net.atos.entng.rbs.service.*;
-import net.atos.entng.rbs.service.pdf.PdfExportService;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
-import org.vertx.java.core.http.RouteMatcher;
 
-
-import static net.atos.entng.rbs.BookingUtils.*;
-
+import net.atos.entng.rbs.filters.TypeAndResourceAppendPolicy;
+import net.atos.entng.rbs.service.*;
 import net.atos.entng.rbs.models.Unavailability;
-import net.atos.entng.rbs.models.Booking;
-import net.atos.entng.rbs.models.Resource;
-import net.atos.entng.rbs.service.BookingService;
-import net.atos.entng.rbs.service.BookingServiceSqlImpl;
 import net.atos.entng.rbs.service.ResourceService;
 import net.atos.entng.rbs.service.ResourceServiceSqlImpl;
 

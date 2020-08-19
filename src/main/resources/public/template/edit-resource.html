@@ -110,7 +110,7 @@
 
 		<!-- Unavailable periods -->
 		<hr/>
-		<div class="row" ng-include="'/rbs/public/template/unavailability-table.html'"></div>
+		<div class="row" ng-if="editedResource.id != undefined" ng-include="'/rbs/public/template/unavailability-table.html'"></div>
 		<hr class="row" />
 
 		<div class="warning default-fontsize" ng-if="isResourceUnavailabilityUsed()">

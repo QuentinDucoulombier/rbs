@@ -339,9 +339,11 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 
 		StringBuilder query = new StringBuilder();
 		query.append("UPDATE rbs.booking").append(" SET ").append(sb.toString()).append("modified = NOW()")
+				.append(", booking_reason = ?")
 				.append(", quantity = ?")
 				.append(", start_date = ?")
 				.append(", end_date = ?" );
+		values.add(booking.getBookingReason());
 		values.add(booking.getBookingQuantity());
 		values.add(toSQLTimestamp(slot.getStartUTC()));
 		values.add(toSQLTimestamp(slot.getEndUTC()));
@@ -401,8 +403,8 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 		// 2. Update parent booking
 		StringBuilder parentQuery = new StringBuilder();
 		JsonArray parentValues = new fr.wseduc.webutils.collections.JsonArray();
-		parentQuery.append("UPDATE rbs.booking").append(" SET booking_reason = ?, start_date = ?, end_date = ?,");
-		parentValues.add(booking.getBookingReason()).add(toSQLTimestamp(slot.getStartUTC()))
+		parentQuery.append("UPDATE rbs.booking").append(" SET booking_reason = ?, quantity = ?, start_date = ?, end_date = ?,");
+		parentValues.add(booking.getBookingReason()).add(booking.getBookingQuantity()).add(toSQLTimestamp(slot.getStartUTC()))
 				.add(endDate > 0L ? toSQLTimestamp(endDate) : null); // the null value will be replaced by the last
 																		// slot's end date
 		final int endDateIndex = parentValues.size() - 1;
