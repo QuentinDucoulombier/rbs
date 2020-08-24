@@ -174,14 +174,16 @@
                             </label>
                             <div ng-if="booking.startDate.getDate() == booking.endDate.getDate() && booking.startDate.getMonth() == booking.endDate.getMonth()
       									&& booking.startDate.getFullYear() == booking.endDate.getFullYear()">
-                                <time-picker-rbs class="two cell horizontal-spacing" ng-limit="booking.endTime"
-                                                 ng-begin="true" ng-model="booking.startTime" ng-change="updateQuantitiesAvailable(editedBooking)"
+                                <time-picker-rbs class="two cell horizontal-spacing" ng-model="booking.startTime"
+                                                 ng-begin="true" ng-limit="booking.endTime"
+                                                 ng-change="updateQuantitiesAvailable(editedBooking)"
                                                  required></time-picker-rbs>
                             </div>
                             <div ng-if="booking.startDate.getDate() != booking.endDate.getDate() || booking.startDate.getMonth() != booking.endDate.getMonth()
       									|| booking.startDate.getFullYear() != booking.endDate.getFullYear()">
-                                <time-picker-rbs class="two cell horizontal-spacing" ng-begin="true"
-                                                 ng-model="booking.startTime" ng-change="updateQuantitiesAvailable(editedBooking)"
+                                <time-picker-rbs class="two cell horizontal-spacing" ng-model="booking.startTime"
+                                                 ng-begin="true"
+                                                 ng-change="updateQuantitiesAvailable(editedBooking)"
                                                  required></time-picker-rbs>
                             </div>
                             <label class="one cell centered-text">
@@ -189,14 +191,16 @@
                             </label>
                             <div ng-if="booking.startDate.getDate() == booking.endDate.getDate() && booking.startDate.getMonth() == booking.endDate.getMonth()
       									&& booking.startDate.getFullYear() == booking.endDate.getFullYear()">
-                                <time-picker-rbs class="two cell horizontal-spacing" ng-limit="booking.startTime"
-                                                 ng-end="true" ng-model="booking.endTime" ng-change="updateQuantitiesAvailable(editedBooking)"
+                                <time-picker-rbs class="two cell horizontal-spacing" ng-model="booking.endTime"
+                                                 ng-end="true" ng-limit="booking.startTime"
+                                                 ng-change="updateQuantitiesAvailable(editedBooking)"
                                                  required></time-picker-rbs>
                             </div>
                             <div ng-if="booking.startDate.getDate() != booking.endDate.getDate() || booking.startDate.getMonth() != booking.endDate.getMonth()
       									|| booking.startDate.getFullYear() != booking.endDate.getFullYear()">
-                                <time-picker-rbs class="two cell horizontal-spacing" ng-end="true"
-                                                 ng-model="booking.endTime" ng-change="updateQuantitiesAvailable(editedBooking)"
+                                <time-picker-rbs class="two cell horizontal-spacing" ng-model="booking.endTime"
+                                                 ng-end="true"
+                                                 ng-change="updateQuantitiesAvailable(editedBooking)"
                                                  required></time-picker-rbs>
                             </div>
 

@@ -177,8 +177,8 @@
                         </thead>
                         <tbody ng-repeat="slot in selectedBooking._slots | orderBy: 'startMoment'">
                         <tr>
-                            <td ng-if="slot == currentBookingSelected">[[$index + 1]] <em style="color:red">*</em></td>
-                            <td ng-if="slot != currentBookingSelected">[[$index + 1]]</td>
+                            <td ng-if="slot.id == currentBookingSelected.id">[[$index + 1]] <em style="color:red">*</em></td>
+                            <td ng-if="slot.id != currentBookingSelected.id">[[$index + 1]]</td>
                             <td ng-if="slot.isRefused()"><a ng-click="switchExpandSlot(slot)">[[formatMoment(slot.startMoment)]]</a>
                             </td>
                             <td ng-if="! slot.isRefused()">[[formatMoment(slot.startMoment)]]</td>

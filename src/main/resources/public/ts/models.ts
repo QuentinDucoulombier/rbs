@@ -255,24 +255,9 @@ Booking.prototype.process = function (data, cb, cbe, context) {
         });
 };
 
-Booking.prototype.delete = function (cb, cbe) {
+Booking.prototype.delete = function (cb, cbe, periodicThisAndAfter = false) {
     var booking = this;
-    http().delete('/rbs/resource/' + this.resource.id + '/booking/' + this.id + "/false")
-        .done(function () {
-            if (typeof cb === 'function') {
-                cb();
-            }
-        })
-        .error(function (e) {
-            if (typeof cbe === 'function') {
-                cbe(model.parseError(e, booking, 'delete'));
-            }
-        });
-};
-
-Booking.prototype.deletePeriodicCurrentToFuture = function (cb, cbe) {
-    var booking = this;
-    http().delete('/rbs/resource/' + this.resource.id + '/booking/' + this.id + "/true")
+    http().delete('/rbs/resource/' + this.resource.id + '/booking/' + this.id + "/" + periodicThisAndAfter)
         .done(function () {
             if (typeof cb === 'function') {
                 cb();
