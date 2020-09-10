@@ -128,6 +128,8 @@
                 </h2>
                 <div class="toggle">
                     <div class="content">
+                        <!-- Errors -->
+                        <div class="warning default-fontsize">[[formatTextBookingQuantity()]]</div>
 
                         <!-- Booking start - non periodic -->
                         <div class="row" ng-if="! editedBooking.is_periodic">
@@ -207,7 +209,6 @@
                         </div>
 
                         <!-- Booking quantity -->
-                        <div class="warning default-fontsize">[[formatTextBookingQuantity()]]</div>
                         <div class="row">
                             <label class="three cell"><i18n>rbs.booking.edit.quantity.label</i18n></label>
                             <input class="input-size" type="number" min="1" max="[[tempQuantities.bookingQuantityAvailable]]"
@@ -281,7 +282,7 @@
                         </div>
 
                         <!-- Errors -->
-                        <div ng-include="template.containers.editBookingErrors"></div>
+<!--                        <div ng-include="template.containers.editBookingErrors"></div>-->
                     </div>
                 </div>
             </article>
@@ -380,7 +381,7 @@
 
 
                         <!-- Quantity warning -->
-                        <div class="warning default-fontsize" ng-if="isBookingQuantityWrong(editedBooking)">
+                        <div class="warning default-fontsize" ng-if="isBookingDataWrong(editedBooking)">
                             <i18n>rbs.booking.edit.period.warning.quantity</i18n>
                         </div>
 
@@ -397,28 +398,28 @@
                         ng-click="saveBooking()"
                         ng-if="display.processing !== true && editedBooking.is_periodic !== true && editedBooking.display.state === editedBooking.display.STATE_BOOKING
 									&& editedBooking.type.slotprofile === undefined"
-                        ng-disabled="isBookingQuantityWrong(editedBooking)">
+                        ng-disabled="isBookingDataWrong(editedBooking)">
                     <i18n>rbs.save</i18n>
                 </button>
                 <button class="right-magnet"
                         ng-click="saveBooking()"
                         ng-if="display.processing !== true && editedBooking.is_periodic && editedBooking.display.state === editedBooking.display.STATE_PERIODIC
 							&& editedBooking.type.slotprofile === undefined"
-                        ng-disabled="isBookingQuantityWrong(editedBooking)">
+                        ng-disabled="isBookingDataWrong(editedBooking)">
                     <i18n>rbs.save</i18n>
                 </button>
                 <button class="right-magnet"
                         ng-click="saveBookingSlotProfile()"
                         ng-if="display.processing !== true && editedBooking.is_periodic !== true && editedBooking.display.state === editedBooking.display.STATE_BOOKING
 							&& editedBooking.type.slotprofile !== undefined"
-                        ng-disabled="isBookingQuantityWrong(editedBooking)">
+                        ng-disabled="isBookingDataWrong(editedBooking)">
                     <i18n>rbs.save</i18n>
                 </button>
                 <button class="right-magnet"
                         ng-click="saveBookingSlotProfile()"
                         ng-if="display.processing !== true && editedBooking.is_periodic && editedBooking.display.state === editedBooking.display.STATE_PERIODIC
 							&& editedBooking.type.slotprofile !== undefined"
-                        ng-disabled="isBookingQuantityWrong(editedBooking)">
+                        ng-disabled="isBookingDataWrong(editedBooking)">
                     <i18n>rbs.save</i18n>
                 </button>
                 <button class="right-magnet"

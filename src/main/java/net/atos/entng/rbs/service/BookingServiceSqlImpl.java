@@ -101,8 +101,7 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 
 		// If validation is activated, the booking is created with status "created".
 		// Otherwise, it is created with status "validated".
-		// TODO V2 : la reservation doit etre automatiquement validee si le demandeur
-		// est valideur
+		// TODO V2 : la reservation doit etre automatiquement validee si le demandeur est valideur
 		query.append(" (SELECT CASE ").append(" WHEN (t.validation IS true) THEN ?").append(" ELSE ?").append(" END")
 				.append(" FROM rbs.resource_type AS t").append(" INNER JOIN rbs.resource AS r ON r.type_id = t.id")
 				.append(" WHERE r.id = ?),");
@@ -113,16 +112,10 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 		values.add(toSQLTimestamp(slot.getStartUTC()))
 				.add(toSQLTimestamp(slot.getEndUTC()));
 
-		// Check that there does not exist a validated booking that overlaps the new
-		// booking.
-		query.append(" WHERE NOT EXISTS (").append("SELECT 1 FROM rbs.booking").append(" WHERE resource_id = ?")
-				.append(" AND status = ?").append(" AND (start_date, end_date) OVERLAPS (?, ?)")
-				.append(") RETURNING id, status,").append(" to_char(start_date, '").append(DATE_FORMAT)
-				.append("') AS start_date,").append(" to_char(end_date, '").append(DATE_FORMAT)
-				.append("') AS end_date");
+		// Returning result
+		query.append(" RETURNING id, quantity, status,").append(" to_char(start_date, '").append(DATE_FORMAT)
+				.append("') AS start_date,").append(" to_char(end_date, '").append(DATE_FORMAT).append("') AS end_date");
 
-		values.add(rId).add(VALIDATED.status()).add(toSQLTimestamp(slot.getStartUTC()))
-				.add(toSQLTimestamp(slot.getEndUTC()));
 		return new JsonObject().put("query", query).put("values", values );
 	}
 
@@ -601,7 +594,6 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 						DateUtils.isBetween(bookingEndDate, searchStartDate, searchEndDate));
 	}
 
-
 	@Override
 	public void processBooking(final String resourceId, final String bookingId, final int newStatus,
 			final JsonObject data, final UserInfos user, final Handler<Either<String, JsonArray>> handler) {
@@ -650,48 +642,9 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 				validateValues.add(pValue);
 			}
 
-			// Validate if and only if there does NOT exist a concurrent validated booking
-			validateQuery.append(" AND NOT EXISTS (").append("SELECT 1 FROM rbs.booking")
-					.append(" WHERE resource_id = ?").append(" AND status = ?")
-					.append(" AND (start_date, end_date) OVERLAPS ((SELECT start_date from validated_booking), (SELECT end_date from validated_booking))")
-					.append(")");
-			;
-			validateValues.add(rId).add(VALIDATED.status());
-
 			validateQuery.append(returningClause);
 
 			statementsBuilder.prepared(validateQuery.toString(), validateValues);
-
-			// 4. Query to refuse potential concurrent bookings of the validated booking
-			StringBuilder rbQuery = new StringBuilder();
-			JsonArray rbValues = new fr.wseduc.webutils.collections.JsonArray();
-
-			// Store start and end dates of validated booking in a temporary table
-			rbQuery.append("WITH validated_booking AS (").append(" SELECT start_date, end_date")
-					.append(" FROM rbs.booking").append(" WHERE id = ?)");
-			rbValues.add(bId);
-
-			rbQuery.append(" UPDATE rbs.booking")
-					.append(" SET status = ?, moderator_id = ?, refusal_reason = ?, modified = NOW() ");
-			rbValues.add(REFUSED.status()).add(user.getUserId())
-					.add("<i18n>rbs.booking.automatically.refused.reason</i18n>" + bId);
-
-			// Refuse concurrent bookings if and only if the previous query has validated
-			// the booking
-			rbQuery.append(" WHERE EXISTS (").append(" SELECT 1 FROM rbs.booking").append(" WHERE id = ?")
-					.append(" AND status = ?)");
-			rbValues.add(bId).add(VALIDATED.status());
-
-			// Get concurrent bookings' ids that must be refused
-			rbQuery.append(" AND id in (").append(" SELECT id FROM rbs.booking").append(" WHERE resource_id = ?")
-					.append(" AND status = ?")
-					.append(" AND (start_date, end_date) OVERLAPS ((SELECT start_date from validated_booking), (SELECT end_date from validated_booking))")
-					.append(")");
-			rbValues.add(rId).add(CREATED.status());
-
-			rbQuery.append(returningClause);
-
-			statementsBuilder.prepared(rbQuery.toString(), rbValues);
 		}
 
 		// Send queries to event bus

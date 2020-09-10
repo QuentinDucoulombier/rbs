@@ -120,8 +120,6 @@ public class UnavailabilityController extends ControllerHelper {
 
 	@Get("/resource/:id/unavailability") // Parameter "id" is the resourceId
 	@ApiDoc("List all unavailability of a resource")
-	@SecuredAction(value = "rbs.manager", type = ActionType.RESOURCE)
-	@ResourceFilter(TypeAndResourceAppendPolicy.class)
 	public void listResourceUnavailability(final HttpServerRequest request) {
 		UserUtils.getUserInfos(eb, request, user -> {
 			if (user != null) {

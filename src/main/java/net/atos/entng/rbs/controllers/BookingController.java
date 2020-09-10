@@ -117,7 +117,6 @@ public class BookingController extends ControllerHelper {
 	@SecuredAction(value = "rbs.contrib", type = ActionType.RESOURCE)
 	@ResourceFilter(TypeAndResourceAppendPolicy.class)
 	public void createBooking(final HttpServerRequest request) {
-
 		UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
 			@Override
 			public void handle(final UserInfos user) {
@@ -662,7 +661,8 @@ public class BookingController extends ControllerHelper {
 							final String bookingId = request.params().get("bookingId");
 
 							int newStatus = json.getInteger("status");
-							if (newStatus != VALIDATED.status() && newStatus != REFUSED.status()  && newStatus != SUSPENDED.status()) {
+							if (newStatus != VALIDATED.status() && newStatus != REFUSED.status() &&
+									newStatus != SUSPENDED.status() && newStatus != CREATED.status()) {
 								badRequest(request, "Invalid status");
 								return;
 							}

@@ -409,8 +409,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             } else {
                 $scope.setSelectedStructureForCreation($scope.structuresWithTypes[0]);
             }
-
-        }
+        };
 
         $scope.deleteTypesInStructures = function () {
             for (var i = 0; i < $scope.structures.length; i++) {
@@ -714,6 +713,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
         };
 
         $scope.isViewBooking = false;
+        
         // Bookings
         $scope.viewBooking = function (booking) {
             // booking = semanticObject(booking, Booking);
@@ -1047,6 +1047,10 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             }
             $scope.editedBooking.startMoment.seconds(0);
             $scope.editedBooking.endMoment.seconds(0);
+            if ($scope.editedBooking.startMoment.isBefore(moment().hour(moment().hour()+2))) {
+                notify.error('rbs.booking.invalid.datetimes.past');
+                $scope.closeBooking();
+            }
             // DEBUG
             var DEBUG_editedBooking = $scope.editedBooking;
             // /DEBUG
@@ -2423,9 +2427,14 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
         };
 
         $scope.saveResource = function () {
-            if ($scope.listBookingsConflictingQuantity.length > 0) {
+            let newConflicts = [];
+            $scope.listBookingsConflictingQuantity.forEach(function(booking) {
+                if (booking.status === 1 || booking.status === 2) {
+                    newConflicts.push(booking);
+                }
+            });
+            if (newConflicts.length > 0) {
                 $scope.displayLightbox.saveQuantityResource = true;
-                // fixViewNotDisplayed();
             }
             else {
                 $scope.doSaveResource();
@@ -2458,6 +2467,26 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             // Suspend conflicting bookings
             if ($scope.listBookingsConflictingQuantity.length > 0) {
                 suspendBookings($scope.listBookingsConflictingQuantity);
+            }
+
+            // Validate all bookings not conflicting if it's an auto-validated resource
+            $scope.processBookings = [];
+            if (!$scope.editedResource.validation) {
+                $scope.editedResource.bookings.forEach(function (booking) {
+                    if (!$scope.listBookingsConflictingQuantity.find(b => b.id === booking.id)) {
+                        $scope.processBookings.push(booking);
+                    }
+                });
+                $scope.doValidateBookingSelection();
+            }
+            else {
+                let bookingsForStatusCreated = [];
+                $scope.editedResource.bookings.forEach(function (booking) {
+                    if (!$scope.listBookingsConflictingQuantity.find(b => b.id === booking.id)) {
+                        bookingsForStatusCreated.push(booking);
+                    }
+                });
+                submitBookings(bookingsForStatusCreated);
             }
         };
 
@@ -3109,7 +3138,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                 $scope.listBookingsConflictingOneAvailability = [];
                 $scope.editedResource.bookings.forEach(function (booking) {
                     if (isBookingUsingUnavailability($scope.editedUnavailability, booking)) {
-                        $scope.updateQuantitiesAvailable(booking );
+                        $scope.updateQuantitiesAvailable(booking);
                         if ($scope.tempQuantities.bookingQuantityAvailable - booking.quantity < $scope.editedUnavailability.quantity) {
                             $scope.listBookingsConflictingOneAvailability.push(booking);
                         }
@@ -3117,7 +3146,6 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                 });
                 if ($scope.listBookingsConflictingOneAvailability.length > 0) {
                     $scope.displayLightbox.saveUnavailabilityResource = true;
-                    // fixViewNotDisplayed();
                 }
                 else {
                     $scope.doSaveUnavailability();
@@ -3253,8 +3281,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
 
         const checkEditedBookingMoments = function () : boolean {
             var hasErrors = false;
-            if (
-                $scope.editedBooking.startDate.getFullYear() < $scope.today.year() ||
+            if (($scope.editedBooking.startDate.getFullYear() < $scope.today.year() ||
                 ($scope.editedBooking.startDate.getFullYear() == $scope.today.year() &&
                     $scope.editedBooking.startDate.getMonth() < $scope.today.month()) ||
                 ($scope.editedBooking.startDate.getFullYear() == $scope.today.year() &&
@@ -3263,13 +3290,25 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                 ($scope.editedBooking.startDate.getFullYear() == $scope.today.year() &&
                     $scope.editedBooking.startDate.getMonth() == $scope.today.month() &&
                     $scope.editedBooking.startDate.getDate() == $scope.today.date() &&
-                    $scope.editedBooking.startTime.hour() < moment().hour())
+                    $scope.editedBooking.startTime.hour() < moment().hour())) &&
+                !$scope.currentErrors.find(err => err.error === 'rbs.booking.invalid.datetimes.past')
             ) {
-                $scope.currentErrors.push({
-                    error: 'rbs.booking.invalid.datetimes.past',
-                });
-                notify.error('rbs.booking.invalid.datetimes.past');
+                $scope.currentErrors.push({error: 'rbs.booking.invalid.datetimes.past'});
                 hasErrors = true;
+            }
+            if ($scope.editedBooking.startDate.getFullYear() == $scope.editedBooking.endDate.getFullYear() &&
+                $scope.editedBooking.startDate.getMonth() == $scope.editedBooking.endDate.getMonth() &&
+                $scope.editedBooking.startDate.getDate() == $scope.editedBooking.endDate.getDate() &&
+                $scope.editedBooking.endTime.hour() == $scope.editedBooking.startTime.hour() &&
+                $scope.editedBooking.endTime.minute() == $scope.editedBooking.startTime.minute() &&
+                !$scope.currentErrors.find(err => err.error === 'rbs.booking.invalid.datetimes.equals')) {
+                    $scope.currentErrors.push({error: 'rbs.booking.invalid.datetimes.equals'});
+                    hasErrors = true;
+            }
+            if ($scope.editedBooking.startDate.getTime() > $scope.editedBooking.endDate.getTime() &&
+                !$scope.currentErrors.find(err => err.error === 'rbs.booking.invalid.datetimes.switched')) {
+                    $scope.currentErrors.push({error: 'rbs.booking.invalid.datetimes.switched'});
+                    hasErrors = true;
             }
             return hasErrors;
         };
@@ -3474,12 +3513,16 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
         };
 
         $scope.formatTextBookingQuantity = function() : string {
-            if ($scope.tempQuantities.bookingQuantityAvailable <= 0) {
+            if ($scope.currentErrors.length > 0) {
+                return lang.translate($scope.currentErrors[0].error);
+            }
+            else if ($scope.tempQuantities.bookingQuantityAvailable <= 0) {
                 return lang.translate('rbs.booking.edit.quantity.none');
             }
-
-            return $scope.tempQuantities.bookingQuantityAvailable + lang.translate('rbs.booking.edit.quantity.on') +
+            else {
+                return $scope.tempQuantities.bookingQuantityAvailable + lang.translate('rbs.booking.edit.quantity.on') +
                 $scope.tempQuantities.resourceQuantityAvailable + lang.translate('rbs.booking.edit.quantity.availability');
+            }
         };
 
         $scope.formatTextTooltipQuantity = function(item:any) : string {
@@ -3494,8 +3537,11 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             return (booking.quantity===undefined?"?":booking.quantity) + " / " + resourceQuantity;
         };
 
-        $scope.isBookingQuantityWrong = function(booking) : boolean {
-            return booking.quantity < 1 || booking.quantity === undefined || booking.quantity > $scope.tempQuantities.bookingQuantityAvailable;
+        $scope.isBookingDataWrong = function(booking) : boolean {
+            return booking.quantity < 1 ||
+                booking.quantity === undefined ||
+                booking.quantity > $scope.tempQuantities.bookingQuantityAvailable ||
+                checkEditedBookingMoments();
         };
 
         const isNotPast = function (booking) : boolean {
@@ -3509,6 +3555,37 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                 var actions = $scope.processBookings.length;
                 _.each($scope.processBookings, function (booking) {
                     booking.suspend(
+                        function () {
+                            actions--;
+                            if (actions === 0) {
+                                $scope.display.processing = undefined;
+                                model.refreshBookings($scope.display.list);
+                            }
+                        },
+                        function (e) {
+                            $scope.currentErrors.push(e);
+                            actions--;
+                            if (actions === 0) {
+                                $scope.display.processing = undefined;
+                                $scope.showActionErrors();
+                                model.refreshBookings($scope.display.list);
+                            }
+                        }
+                    );
+                });
+            } catch (e) {
+                $scope.display.processing = undefined;
+                $scope.currentErrors.push({error: 'rbs.error.technical'});
+            }
+        };
+
+        const submitBookings = function (bookings) {
+            $scope.processBookings = bookings;
+            $scope.display.processing = true;
+            try {
+                var actions = $scope.processBookings.length;
+                _.each($scope.processBookings, function (booking) {
+                    booking.submit(
                         function () {
                             actions--;
                             if (actions === 0) {

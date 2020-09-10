@@ -114,6 +114,7 @@ function Booking(book?) {
         this.endDate = endDate.toDate();
     }
 
+    this.locked = true;
     this.resource = new Resource();
 }
 
@@ -238,6 +239,14 @@ Booking.prototype.suspend = function (cb, cbe) {
         status: this.status
     };
     this.process(data, cb, cbe, 'suspend');
+};
+
+Booking.prototype.submit = function (cb, cbe) {
+    this.status = model.STATE_CREATED;
+    var data = {
+        status: this.status
+    };
+    this.process(data, cb, cbe, 'create');
 };
 
 Booking.prototype.process = function (data, cb, cbe, context) {
