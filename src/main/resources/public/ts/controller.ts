@@ -3186,6 +3186,28 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                 });
                 suspendBookings(bookingsToSuspend);
             }
+
+            // Validate all bookings not conflicting if it's an auto-validated resource
+            $scope.processBookings = [];
+            if (!$scope.editedResource.validation) {
+                $scope.editedResource.bookings.forEach(function (booking) {
+                    if (isBookingUsingUnavailability($scope.editedUnavailability, booking) &&
+                        !$scope.listBookingsConflictingOneAvailability.find(b => b.id === booking.id)) {
+                            $scope.processBookings.push(booking);
+                    }
+                });
+                $scope.doValidateBookingSelection();
+            }
+            else {
+                let bookingsForStatusCreated = [];
+                $scope.editedResource.bookings.forEach(function (booking) {
+                    if (isBookingUsingUnavailability($scope.editedUnavailability, booking) &&
+                        !$scope.listBookingsConflictingOneAvailability.find(b => b.id === booking.id)) {
+                            bookingsForStatusCreated.push(booking);
+                    }
+                });
+                submitBookings(bookingsForStatusCreated);
+            }
         };
 
         $scope.deleteUnavailability = function(index:number) : void {
@@ -3210,6 +3232,28 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                     $scope.showActionErrors();
                 }
             );
+
+            // Validate all bookings not conflicting if it's an auto-validated resource
+            $scope.processBookings = [];
+            if (!$scope.editedResource.validation) {
+                $scope.editedResource.bookings.forEach(function (booking) {
+                    $scope.updateQuantitiesAvailable(booking);
+                    if ($scope.tempQuantities.bookingQuantityAvailable - booking.quantity >= 0) {
+                        $scope.processBookings.push(booking);
+                    }
+                });
+                $scope.doValidateBookingSelection();
+            }
+            else {
+                let bookingsForStatusCreated = [];
+                $scope.editedResource.bookings.forEach(function (booking) {
+                    $scope.updateQuantitiesAvailable(booking);
+                    if ($scope.tempQuantities.bookingQuantityAvailable - booking.quantity >= 0) {
+                        bookingsForStatusCreated.push(booking);
+                    }
+                });
+                submitBookings(bookingsForStatusCreated);
+            }
         };
 
         $scope.initTempQuantities = function(resourceQuantity, bookingQuantity) : void  {
