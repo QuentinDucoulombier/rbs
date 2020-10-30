@@ -70,7 +70,7 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 	public void createBooking(final String resourceId, final Booking booking, final UserInfos user,
 			final Handler<Either<String, JsonObject>> handler) {
 		SqlStatementsBuilder statementsBuilder = new SqlStatementsBuilder();
-// Upsert current user
+		// Upsert current user
 		statementsBuilder.prepared(UPSERT_USER_QUERY,
 				new fr.wseduc.webutils.collections.JsonArray().add(user.getUserId()).add(user.getUsername()));
 
@@ -95,15 +95,16 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 		JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
 		query.append("INSERT INTO rbs.booking")
-				.append("(resource_id, owner, booking_reason, quantity, status, start_date, end_date)")
+				.append(" (resource_id, owner, booking_reason, quantity, status, start_date, end_date)")
 				.append(" SELECT  ?, ?, ?, ?,");
 		values.add(rId).add(user.getUserId()).add(booking.getBookingReason()).add(booking.getBookingQuantity());
 
 		// If validation is activated, the booking is created with status "created".
 		// Otherwise, it is created with status "validated".
 		// TODO V2 : la reservation doit etre automatiquement validee si le demandeur est valideur
-		query.append(" (SELECT CASE ").append(" WHEN (t.validation IS true) THEN ?").append(" ELSE ?").append(" END")
-				.append(" FROM rbs.resource_type AS t").append(" INNER JOIN rbs.resource AS r ON r.type_id = t.id")
+		query.append(" (SELECT CASE WHEN (t.validation IS true) THEN ? ELSE ? END")
+				.append(" FROM rbs.resource_type AS t")
+				.append(" INNER JOIN rbs.resource AS r ON r.type_id = t.id")
 				.append(" WHERE r.id = ?),");
 		values.add(CREATED.status()).add(VALIDATED.status()).add(rId);
 
@@ -113,8 +114,9 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 				.add(toSQLTimestamp(slot.getEndUTC()));
 
 		// Returning result
-		query.append(" RETURNING id, quantity, status,").append(" to_char(start_date, '").append(DATE_FORMAT)
-				.append("') AS start_date,").append(" to_char(end_date, '").append(DATE_FORMAT).append("') AS end_date");
+		query.append(" RETURNING id, quantity, status,")
+				.append(" to_char(start_date, '").append(DATE_FORMAT).append("') AS start_date,")
+				.append(" to_char(end_date, '").append(DATE_FORMAT).append("') AS end_date");
 
 		return new JsonObject().put("query", query).put("values", values );
 	}
@@ -196,8 +198,8 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 		long lastSlotEndDateUTC = firstSlotEndDate;
 
 		// 1. INSERT clause for the first child booking
-		query.append(
-				" INSERT INTO rbs.booking (resource_id, owner, booking_reason, quantity, start_date, end_date, parent_booking_id, status, refusal_reason)")
+		query.append(" INSERT INTO rbs.booking (resource_id, owner, booking_reason, quantity, start_date, end_date,")
+				.append(" parent_booking_id, status, refusal_reason)")
 				.append(" VALUES(?, ?, ?, ?, ?, ?,");
 		values.add(resourceId)
 				.add(user.getUserId())
@@ -213,34 +215,13 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 			query.append("(select id from parent_booking),");
 		}
 
-		/*
-		 * Subquery to insert proper status : refused if there exist a concurrent
-		 * validated booking. Created if validation is activated. Validated otherwise
-		 */
-		query.append(" (SELECT CASE").append(" WHEN (").append(" EXISTS(SELECT 1 FROM rbs.booking")
-				.append(" WHERE status = ?").append(" AND (start_date, end_date) OVERLAPS (?, ?)")
-				.append(" AND resource_id = ?").append(" )) THEN ?");
-		values.add(VALIDATED.status()).add(toSQLTimestamp(firstSlotStartDate)).add(toSQLTimestamp(firstSlotEndDate))
-				.add(resourceId).add(REFUSED.status());
-		query.append(" WHEN (t.validation IS true) THEN ?").append(" ELSE ? END").append(" FROM rbs.resource_type AS t")
-				.append(" INNER JOIN rbs.resource AS r ON r.type_id = t.id").append(" WHERE r.id = ?").append("),");
-		values.add(CREATED.status()).add(VALIDATED.status()).add(resourceId);
+		// Subquery to insert proper status : created if validation is activated. Validated otherwise
 
-		// refused because of concurrent in case of periodic reservation
-		query.append(" (SELECT CASE").append(" WHEN (").append(" EXISTS(SELECT 1 FROM rbs.booking")
-				.append(" WHERE status = ?").append(" AND (start_date, end_date) OVERLAPS (?, ?) AND resource_id = ?")//
-				.append(" )) THEN ?");
-		values.add(VALIDATED.status()).add(toSQLTimestamp(firstSlotStartDate)).add(toSQLTimestamp(firstSlotEndDate))
-				.add(resourceId).add("<i18n>rbs.booking.automatically.refused.reason</i18n>");
-
-		// finding the conflicted booking id
-		query.append(" || ( SELECT id FROM rbs.booking").append(" WHERE status = ?")
-				.append(" AND (start_date, end_date) OVERLAPS (?, ?) AND resource_id = ? LIMIT 1 )");
-		values.add(VALIDATED.status()).add(toSQLTimestamp(firstSlotStartDate)).add(toSQLTimestamp(firstSlotEndDate))
-				.add(resourceId);
-
-		query.append(" ELSE ? END)) ");
-		values.addNull();
+		query.append(" (SELECT CASE WHEN (t.validation IS true) THEN ? ELSE ? END")
+				.append(" FROM rbs.resource_type AS t")
+				.append(" INNER JOIN rbs.resource AS r ON r.type_id = t.id")
+				.append(" WHERE r.id = ?), ?)");
+		values.add(CREATED.status()).add(VALIDATED.status()).add(resourceId).addNull();
 
 		// 2. Additional VALUES to insert the other child bookings
 		int nbOccurences = booking.getOccurrences(-1);
@@ -261,31 +242,11 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 					query.append("(select id from parent_booking),");
 				}
 
-				query.append(" (SELECT CASE").append(" WHEN (").append(" EXISTS(SELECT 1 FROM rbs.booking")
-						.append(" WHERE status = ?");
-				query.append(" AND (start_date, end_date) OVERLAPS (?, ?) AND resource_id = ?").append(" )) THEN ?");
-				values.add(VALIDATED.status()).add(toSQLTimestamp(slotIt.getStartUTC())).add(toSQLTimestamp(slotIt.getEndUTC()))
-						.add(resourceId).add(REFUSED.status());
-				query.append(" WHEN (t.validation IS true) THEN ?").append(" ELSE ? END")
-						.append(" FROM rbs.resource_type AS t").append(" INNER JOIN rbs.resource AS r ON r.type_id = t.id")
-						.append(" WHERE r.id = ?").append("), ");
-				values.add(CREATED.status()).add(VALIDATED.status()).add(resourceId);
-
-				// refused because of concurrent in case of periodic reservation
-				query.append(" (SELECT CASE").append(" WHEN (").append(" EXISTS(SELECT 1 FROM rbs.booking")
-						.append(" WHERE status = ?")
-						.append(" AND (start_date, end_date) OVERLAPS (? ,?) AND resource_id = ?").append(" )) THEN ?");
-				values.add(VALIDATED.status()).add(toSQLTimestamp(slotIt.getStartUTC())).add(toSQLTimestamp(slotIt.getEndUTC()))
-						.add(resourceId).add("<i18n>rbs.booking.automatically.refused.reason</i18n>");
-
-				// finding the conflicted booking id
-				query.append(" || (SELECT id FROM rbs.booking").append(" WHERE status = ?")
-						.append(" AND (start_date, end_date) OVERLAPS (? , ?) AND resource_id = ? LIMIT 1 )");
-				values.add(VALIDATED.status()).add(toSQLTimestamp(slotIt.getStartUTC())).add(toSQLTimestamp(slotIt.getEndUTC()))
-						.add(resourceId);
-
-				query.append(" ELSE ? END)) ");
-				values.addNull();
+				query.append(" (SELECT CASE WHEN (t.validation IS true) THEN ? ELSE ? END")
+						.append(" FROM rbs.resource_type AS t")
+						.append(" INNER JOIN rbs.resource AS r ON r.type_id = t.id")
+						.append(" WHERE r.id = ?), ?)");
+				values.add(CREATED.status()).add(VALIDATED.status()).add(resourceId).addNull();
 				//
 				lastSlotEndDateUTC = lastSlotEndDateUTC < slotIt.getEndUTC() ? slotIt.getEndUTC() : lastSlotEndDateUTC;
 			}

@@ -147,6 +147,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             $scope.tempPeriodicBookings = [];
             $scope.editedUnavailability = new Unavailability();
 
+
             template.open('main', 'main-view');
             template.open('top-menu', 'top-menu');
             template.open('editBookingErrors', 'edit-booking-errors');
@@ -220,6 +221,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                     return;
                 }
                 $scope.initResources();
+                syncUnavailabilities();
                 $scope.$apply();
             });
 
@@ -1184,6 +1186,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
         $scope.initPeriodic = function () {
             $scope.editedBooking.is_periodic = true;
             $scope.editedBooking.periodDays = model.bitMaskToDays(); // no days selected
+            $scope.editedBooking.periodDays[$scope.editedBooking.startMoment.day() - 1].value = true; // auto-checked selected day
             $scope.editedBooking.byOccurrences = true;
             $scope.editedBooking.periodicity = 1;
             $scope.editedBooking.occurrences = 1;
@@ -2429,7 +2432,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
         $scope.saveResource = function () {
             let newConflicts = [];
             $scope.listBookingsConflictingQuantity.forEach(function(booking) {
-                if (booking.status === 1 || booking.status === 2) {
+                if (booking.status === $scope.status.STATE_CREATED || booking.status === $scope.status.STATE_VALIDATED) {
                     newConflicts.push(booking);
                 }
             });
@@ -2739,8 +2742,6 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             ($('.hiddendatepickerform') as any).datepicker('setValue', newDate.format("DD/MM/YYYY")).datepicker('update');
             ($('.hiddendatepickerform') as any).trigger({type: 'changeDate', date: newDate});
         };
-
-        this.initialize();
 
         $scope.showDaySelection = true;
         $scope.checkDateFunction = function () {
@@ -3358,6 +3359,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
         };
 
         const calculatePeriodicBookings = function() : void {
+            $scope.currentErrors = [];
             $scope.tempPeriodicBookings = [];
             let currentMoment = moment($scope.editedBooking.startMoment);
             let currentMonday = currentMoment.subtract(currentMoment.weekday(), 'days');
@@ -3373,7 +3375,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             }
 
             // Get tempPeriodicBookings
-            if ($scope.editedBooking.byOccurrences) {
+            if ($scope.editedBooking.byOccurrences && days.length > 0) {
                 while($scope.tempPeriodicBookings.length < $scope.editedBooking.occurrences) {
                     days.forEach(function(day) {
                         if ($scope.tempPeriodicBookings.length < $scope.editedBooking.occurrences) {
@@ -3391,7 +3393,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                     currentMonday.add($scope.editedBooking.periodicity, 'weeks');
                 }
             }
-            else {
+            else if (days.length > 0) {
                 while(currentMoment < moment($scope.booking.periodicEndDate)) {
                     days.forEach(function(day) {
                         if (currentMoment < moment($scope.booking.periodicEndDate)) {
@@ -3409,6 +3411,9 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                     });
                     currentMonday.add($scope.editedBooking.periodicity, 'weeks');
                 }
+            }
+            else {
+                $scope.currentErrors.push({error: 'rbs.period.error.nodays'});
             }
         };
 
@@ -3466,6 +3471,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                         quantities = [];
                         booking.resource.bookings.forEach(function (b) {
                             if (!b.is_periodic &&
+                                b.status != $scope.status.STATE_REFUSED && b.status != $scope.status.STATE_SUSPENDED &&
                                 (b.parent_booking_id == null || b.parent_booking_id != booking.id) &&
                                 slot.startMoment < b.endMoment &&
                                 slot.endMoment > b.startMoment) {
@@ -3485,7 +3491,9 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                     ends = [];
                     quantities = [];
                     booking.resource.bookings.forEach(function (b) {
-                        if (!b.is_periodic && b.id != booking.id && booking.startMoment < b.endMoment && booking.endMoment > b.startMoment) {
+                        if (!b.is_periodic && b.id != booking.id &&
+                            b.status != $scope.status.STATE_REFUSED && b.status != $scope.status.STATE_SUSPENDED &&
+                            booking.startMoment < b.endMoment && booking.endMoment > b.startMoment) {
                             starts.push(b.startMoment.unix());
                             ends.push(b.endMoment.unix());
                             quantities.push(b.quantity);
@@ -3499,7 +3507,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             }
         };
 
-        const findMaxQuantityUsed = function (starts, ends, quantity) : number {
+        const findMaxQuantityUsed = function(starts, ends, quantity) : number {
             let max = 0;
             let currentValue = 0;
             let stop = false;
@@ -3531,7 +3539,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             return max;
         };
 
-        const findPositiveMin = function (array) : number {
+        const findPositiveMin = function(array) : number {
             if (array.length === 0) {
                 return -1;
             }
@@ -3571,7 +3579,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
 
         $scope.formatTextTooltipQuantity = function(item:any) : string {
             let booking = $scope.bookings.find(b => b.id === item.id);
-            $scope.updateUnavailability(booking.resource, booking);
+            $scope.updateQuantitiesAvailable(booking);
 
             let resourceQuantity = $scope.tempQuantities.resourceQuantityAvailable;
             if (resourceQuantity === undefined) {
@@ -3588,11 +3596,11 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                 checkEditedBookingMoments();
         };
 
-        const isNotPast = function (booking) : boolean {
+        const isNotPast = function(booking) : boolean {
             return(moment(booking.startMoment).isAfter(moment()));
         };
 
-        const suspendBookings = function (bookings) {
+        const suspendBookings = function(bookings) {
             $scope.processBookings = bookings;
             $scope.display.processing = true;
             try {
@@ -3623,7 +3631,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             }
         };
 
-        const submitBookings = function (bookings) {
+        const submitBookings = function(bookings) {
             $scope.processBookings = bookings;
             $scope.display.processing = true;
             try {
@@ -3654,7 +3662,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             }
         };
 
-        $scope.updateUnavailability = function (resource, booking?) : void {
+        $scope.updateUnavailability = function(resource, booking?) : void {
             let tempU = new Unavailability({resource:resource});
             tempU.getSiblings(
                 function () {
@@ -3720,5 +3728,16 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             }
             return hasErrors;
         };
+
+
+        const syncUnavailabilities = function() : void {
+            $scope.resourceTypes.forEach(function (resourceType) {
+                resourceType.resources.forEach(function (resource) {
+                    $scope.updateUnavailability(resource, null);
+                });
+            });
+        };
+
+        this.initialize();
     }])
 ;
