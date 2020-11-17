@@ -2479,7 +2479,8 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             $scope.processBookings = [];
             if (!$scope.editedResource.validation) {
                 $scope.editedResource.bookings.forEach(function (booking) {
-                    if (!$scope.listBookingsConflictingQuantity.find(b => b.id === booking.id)) {
+                    if (!$scope.listBookingsConflictingQuantity.find(b => b.id === booking.id) &&
+                        !$scope.listBookingsConflictingAvailability.find(b => b.id === booking.id)) {
                         $scope.processBookings.push(booking);
                     }
                 });
@@ -2488,7 +2489,8 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             else {
                 let bookingsForStatusCreated = [];
                 $scope.editedResource.bookings.forEach(function (booking) {
-                    if (!$scope.listBookingsConflictingQuantity.find(b => b.id === booking.id)) {
+                    if (!$scope.listBookingsConflictingQuantity.find(b => b.id === booking.id) &&
+                        !$scope.listBookingsConflictingAvailability.find(b => b.id === booking.id)) {
                         bookingsForStatusCreated.push(booking);
                     }
                 });
