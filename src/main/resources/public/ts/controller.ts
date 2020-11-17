@@ -772,6 +772,9 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             $scope.display.showPanel = false;
             $scope.slots = undefined;
             template.close('lightbox');
+            closeCreateLightBox();
+
+
         };
 
         $scope.expandPeriodicBooking = function (booking) {
@@ -3024,6 +3027,15 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             for (var i = 0; i < list.length; i++) {
                 if (list[i].getAttribute("show") === 'display.showPanel') {
                     list[i].getElementsByTagName("section")[0].setAttribute('style','display:block;');
+                }
+            }
+        };
+
+        const closeCreateLightBox = function () {
+            var list = document.getElementsByTagName("lightbox");
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].getAttribute("show") === 'display.createItem') {
+                    list[i].getElementsByTagName("section")[0].setAttribute('style','display:none;');
                 }
             }
         };
