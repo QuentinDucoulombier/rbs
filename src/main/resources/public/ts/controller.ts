@@ -1270,9 +1270,21 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             $scope.editedBooking.resource = undefined;
             $scope.selectedSlotStart = undefined;
             $scope.selectedSlotEnd = undefined;
+            var selectedType = undefined;
             if ($scope.selectedStructure.types.length > 0) {
-                $scope.editedBooking.type = $scope.selectedStructure.types[0];
-                $scope.autoSelectResource();
+                $scope.selectedStructure.types.forEach(function (type) {
+                    if (selectedType == undefined && !type.resources.isEmpty()) {
+                        selectedType = type;
+                    }
+                });
+                if (selectedType == undefined) {
+                    notify.error(lang.translate('rbs.booking.warning.no.resources'));
+                } else {
+                    $scope.editedBooking.type = selectedType;
+                    $scope.autoSelectResource();
+                }
+            } else {
+                notify.error(lang.translate('rbs.booking.warning.no.types'));
             }
         };
 
