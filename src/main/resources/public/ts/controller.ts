@@ -3081,7 +3081,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                     $scope.listBookingsConflictingQuantity.push(booking);
                 }
             });
-            if ($scope.editedResource.quantity < 0) {
+            if ($scope.editedResource.quantity <= 0) {
                 $scope.editedUnavailability.quantity = 0;
             }
             else {

@@ -14,7 +14,7 @@ export const timePicker = ng.directive('timePickerRbs', function ($compile) {
         transclude: true,
         replace: true,
         restrict: 'E',
-        template: "<input type='text' />",
+        template: "<input readonly='readonly' type='text' />",
         link: function ($scope, $element, $attributes) {
             var hideFunction = function (e) {
                 var timepicker = $element.data('timepicker');
