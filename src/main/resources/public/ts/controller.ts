@@ -1052,7 +1052,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             }
             $scope.editedBooking.startMoment.seconds(0);
             $scope.editedBooking.endMoment.seconds(0);
-            if ($scope.editedBooking.startMoment.isBefore(moment().hour(moment().hour()+2))) {
+            if ($scope.editedBooking.startMoment.isBefore(moment().hour(moment().hour()+1))) {
                 notify.error('rbs.booking.invalid.datetimes.past');
                 $scope.closeBooking();
             }
