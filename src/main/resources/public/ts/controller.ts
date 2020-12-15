@@ -3317,11 +3317,11 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             // Formats time if they are strings
             if (typeof $scope.editedBooking.startTime === 'string') {
                 const time = $scope.editedBooking.startTime.split(':');
-                $scope.editedBooking.startTime = moment().set('hour', time[0]).set('minute', time[1]);
+                $scope.editedBooking.startTime = moment($scope.booking.startDate).set('hour', time[0]).set('minute', time[1]);
             }
             if (typeof $scope.editedBooking.endTime === 'string') {
                 const time = $scope.booking.endTime.split(':');
-                $scope.editedBooking.endTime = moment().set('hour', time[0]).set('minute', time[1]);
+                $scope.editedBooking.endTime = moment($scope.booking.endDate).set('hour', time[0]).set('minute', time[1]);
             }
 
             try {
