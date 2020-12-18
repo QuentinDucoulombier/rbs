@@ -50,7 +50,16 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                     done = true;
                 }
             }, 50).then(function () {
+                if (exit == 49) showTooltip();
                 if (!done && exit < 50) placingButton(++exit)
+            });
+        }
+
+        function showTooltip() {
+                $(".schedule-item").mouseover(function () {
+                    $timeout(function () {
+                        $scope.$apply();
+                }, 500);
             });
         }
 
@@ -195,7 +204,8 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             });
 
             $scope.bookings.on('sync', () => {
-                $scope.$apply()
+                $scope.$apply();
+                showTooltip();
             });
 
             $scope.resourceTypes.on('sync', function () {
@@ -2483,8 +2493,15 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             );
 
             // Suspend conflicting bookings
+            let bookingsToSuspend = [];
             if ($scope.listBookingsConflictingQuantity.length > 0) {
-                suspendBookings($scope.listBookingsConflictingQuantity);
+                $scope.listBookingsConflictingQuantity.forEach(function(booking) {
+                    if(booking.status != model.STATE_REFUSED) {
+                        bookingsToSuspend.push(booking);
+                    }
+
+                });
+                suspendBookings(bookingsToSuspend);
             }
 
             // Validate all bookings not conflicting if it's an auto-validated resource
@@ -3209,7 +3226,9 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             let bookingsToSuspend = [];
             if ($scope.listBookingsConflictingOneAvailability.length > 0) {
                 $scope.listBookingsConflictingOneAvailability.forEach(function(booking) {
-                    bookingsToSuspend.push(booking);
+                    if(booking.status != model.STATE_REFUSED) {
+                        bookingsToSuspend.push(booking);
+                    }
                 });
                 suspendBookings(bookingsToSuspend);
             }
