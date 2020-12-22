@@ -2166,6 +2166,19 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                             actions--;
                             if (actions === 0) {
                                 $scope.display.processing = undefined;
+                                $scope.bookings.forEach(function (book) {
+                                    if((booking.beginning.isSame(book.startMoment) ||
+                                    booking.end.isSame(book.endMoment))
+                                        && (book.status != model.STATE_REFUSED && $scope.tempQuantities.bookingQuantityAvailable >= book.quantity && !book.is_periodic)) {
+                                        $scope.tempQuantities.bookingQuantityAvailable = $scope.tempQuantities.bookingQuantityAvailable - book.quantity;
+                                        if(book.resource.validation) {
+                                            book.submit();
+                                        } else {
+                                            book.validate();
+                                        }
+                                    }
+
+                                })
                                 $scope.bookings.deselectAll();
                                 $scope.closeBooking();
                                 model.refreshBookings($scope.display.list);
