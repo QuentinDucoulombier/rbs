@@ -218,7 +218,7 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 
 		query.append(" (SELECT CASE WHEN (r.validation IS true) THEN ? ELSE ? END")
 				.append(" FROM rbs.resource AS r")
-				.append(" WHERE r.id = ?),");
+				.append(" WHERE r.id = ?), ?)");
 		values.add(CREATED.status()).add(VALIDATED.status()).add(resourceId).addNull();
 
 		// 2. Additional VALUES to insert the other child bookings
@@ -242,7 +242,7 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 
 				query.append(" (SELECT CASE WHEN (r.validation IS true) THEN ? ELSE ? END")
 				.append(" FROM rbs.resource AS r")
-				.append(" WHERE r.id = ?),");
+				.append(" WHERE r.id = ?), ?)");
 				values.add(CREATED.status()).add(VALIDATED.status()).add(resourceId).addNull();
 				//
 				lastSlotEndDateUTC = lastSlotEndDateUTC < slotIt.getEndUTC() ? slotIt.getEndUTC() : lastSlotEndDateUTC;
@@ -302,8 +302,9 @@ public class BookingServiceSqlImpl extends SqlCrudService implements BookingServ
 		// If validation is activated, the booking status is updated to "created" (the
 		// booking must be validated anew).
 		// Otherwise, it is updated to "validated".
-		query.append(", status = (SELECT CASE ").append(" WHEN (r.validation IS true) THEN ?").append(" ELSE ?")
-				.append(" END").append(" FROM rbs.resource AS r")
+		query.append(", status = (SELECT CASE ").append(" WHEN (t.validation IS true) THEN ?").append(" ELSE ?")
+				.append(" END").append(" FROM rbs.resource_type AS t")
+				.append(" INNER JOIN rbs.resource AS r ON r.type_id = t.id")
 				.append(" INNER JOIN rbs.booking AS b on b.resource_id = r.id").append(" WHERE b.id = ?)");
 		values.add(CREATED.status()).add(VALIDATED.status()).add(bId);
 
