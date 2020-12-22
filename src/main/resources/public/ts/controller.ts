@@ -2169,10 +2169,10 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                                 $scope.bookings.forEach(function (book) {
                                     if((booking.beginning.isSame(book.startMoment) ||
                                     booking.end.isSame(book.endMoment))
-                                        && (book.status != model.STATE_REFUSED && $scope.tempQuantities.bookingQuantityAvailable >= book.quantity && !book.is_periodic)) {
+                                        && (book.status == model.STATE_SUSPENDED && $scope.tempQuantities.bookingQuantityAvailable >= book.quantity && !book.is_periodic)) {
                                         $scope.tempQuantities.bookingQuantityAvailable = $scope.tempQuantities.bookingQuantityAvailable - book.quantity;
                                         if(book.resource.validation) {
-                                            book.submit();
+                                            book.submit()
                                         } else {
                                             book.validate();
                                         }
@@ -2208,6 +2208,19 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                 $scope.currentBookingSelected.delete(
                     function () {
                         $scope.display.processing = undefined;
+                        $scope.bookings.forEach(function (book) {
+                            if(($scope.currentBookingSelected.beginning.isSame(book.startMoment) ||
+                                $scope.currentBookingSelected.end.isSame(book.endMoment))
+                                && ($scope.currentBookingSelected.data.id != book.id && book.status == model.STATE_SUSPENDED && $scope.tempQuantities.bookingQuantityAvailable >= book.quantity && !book.is_periodic)) {
+                                $scope.tempQuantities.bookingQuantityAvailable = $scope.tempQuantities.bookingQuantityAvailable - book.quantity;
+                                if(book.resource.validation) {
+                                    book.submit();
+                                } else {
+                                    book.validate();
+                                }
+                            }
+
+                        })
                         $scope.bookings.deselectAll();
                         $scope.closeBooking();
                         model.refreshBookings($scope.display.list);
