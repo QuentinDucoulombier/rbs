@@ -3149,10 +3149,14 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             return $scope.listBookingsConflictingAvailability.length > 0;
         };
 
-        const isBookingUsingUnavailability = function(unavailability, booking) : boolean {
-            if (!booking.is_periodic && isNotPast(booking) && isUnavailableDay(unavailability, booking) &&
+        const isBookingUsingUnavailability = function(unavailability, booking, check = true) : boolean {
+            if (!booking.is_periodic && isNotPast(booking)  &&
                 booking.startMoment < unavailability.endMoment && booking.endMoment > unavailability.startMoment) {
+                if(check) {
+                    return isUnavailableDay(unavailability, booking);
+                }
                 return true;
+
             }
             return false;
         };
@@ -3263,7 +3267,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             $scope.processBookings = [];
             if (!$scope.editedResource.validation) {
                 $scope.editedResource.bookings.forEach(function (booking) {
-                    if (isBookingUsingUnavailability($scope.editedUnavailability, booking) &&
+                    if (isBookingUsingUnavailability($scope.editedUnavailability, booking, false) &&
                         !$scope.listBookingsConflictingOneAvailability.find(b => b.id === booking.id)) {
                             $scope.processBookings.push(booking);
                     }
@@ -3273,7 +3277,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
             else {
                 let bookingsForStatusCreated = [];
                 $scope.editedResource.bookings.forEach(function (booking) {
-                    if (isBookingUsingUnavailability($scope.editedUnavailability, booking) &&
+                    if (isBookingUsingUnavailability($scope.editedUnavailability, booking, false) &&
                         !$scope.listBookingsConflictingOneAvailability.find(b => b.id === booking.id)) {
                             bookingsForStatusCreated.push(booking);
                     }
@@ -3512,8 +3516,7 @@ export const RbsController: any = ng.controller('RbsController', ['$scope', 'rou
                 }
                 else {
                     resource.unavailability.forEach(function (unavailability) {
-                        if (unavailability.id != $scope.editedUnavailability.id &&
-                            booking.startMoment < unavailability.endMoment &&
+                        if (booking.startMoment < unavailability.endMoment &&
                             booking.endMoment > unavailability.startMoment &&
                             isUnavailableDay(unavailability, booking)) {
                                 $scope.tempQuantities.resourceQuantityAvailable -= unavailability.quantity;
